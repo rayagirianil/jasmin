@@ -446,14 +446,26 @@ class SMPPClientSMListener:
         # @TODO: longDeliverSm part expiry must be configurable
         yield self.redisClient.expire(hashKey, 300)
 
+        # =========================================================================
+        # Code modified by Anil to handle Multipart MO message request received
+        # # This is the last part
+        # if segment_seqnum == total_segments:
+        #     hvals = yield self.redisClient.hvals(hashKey)
+        #     if len(hvals) != total_segments:
+        #         self.log.warning(
+        #             'Received the last part (msg_ref_num:%s) and did not find all parts in redis, data lost !',
+        #             msg_ref_num)
+        #         return
+
+        self.log.info(
+            'Received part (msg_ref_num:%s) of total parts (total_segments:%s)',
+        msg_ref_num, total_segments)
+        
         # This is the last part
-        if segment_seqnum == total_segments:
-            hvals = yield self.redisClient.hvals(hashKey)
-            if len(hvals) != total_segments:
-                self.log.warning(
-                    'Received the last part (msg_ref_num:%s) and did not find all parts in redis, data lost !',
-                    msg_ref_num)
-                return
+        hvals = yield self.redisClient.hvals(hashKey)
+
+        if len(hvals) == total_segments:
+        # =========================================================================
 
             # Get PDUs
             pdus = {}
